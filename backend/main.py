@@ -1,7 +1,6 @@
-import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from elasticsearch import Elasticsearch, exceptions
+from elasticsearch import Elasticsearch
 
 app = FastAPI()
 
@@ -16,20 +15,8 @@ app.add_middleware(
 ELASTICSEARCH_HOST = "http://elasticsearch:9200"
 INDEX_NAME = "india"
 
-def wait_for_elasticsearch():
-    es = None
-    for _ in range(10):  
-        try:
-            es = Elasticsearch(hosts=[ELASTICSEARCH_HOST], request_timeout=30)
-            if es.ping():
-                print("Elasticsearch is ready!")
-                return es 
-        except exceptions.ConnectionError:
-            print("⏳ Waiting for Elasticsearch...")
-            time.sleep(5)  
-    raise Exception("Elasticsearch did not start in time")
+es = Elasticsearch(hosts=[ELASTICSEARCH_HOST], request_timeout=30)
 
-es = wait_for_elasticsearch()
 
 def create_index():
     if not es.indices.exists(index=INDEX_NAME):
@@ -51,7 +38,7 @@ def startup_event():
 
 @app.get("/")
 def home():
-    return {"message": "Backend is running with CORS!"}
+    return {"message": "Backend is running"}
 
 @app.get("/get")
 def get_best_match(query: str):
